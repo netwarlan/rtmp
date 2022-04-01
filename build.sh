@@ -1,3 +1,3 @@
-#!/bin/bash
+#!/bin/zsh
 
-docker build -t rtmp .
+docker build -t netwarlan/rtmp .
