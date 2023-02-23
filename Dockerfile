@@ -1,15 +1,20 @@
-FROM buildpack-deps:stretch
+FROM buildpack-deps:bullseye
 
 ## Versions of Nginx and nginx-rtmp-module to use
-ENV NGINX_VERSION nginx-1.20.2
-ENV NGINX_RTMP_MODULE_VERSION 1.2.2
+ENV NGINX_VERSION="nginx-1.20.2" \
+    NGINX_RTMP_MODULE_VERSION="1.2.2" \
+    NGINX_WEB_DIR="/html"
 
 ## Install dependencies
 RUN apt-get update \
-    && apt-get install -y ca-certificates openssl libssl-dev \
-    && rm -rf /var/lib/apt/lists/* \
+    && apt-get install -y \
+        ca-certificates \
+        openssl \
+        libssl-dev \
+    && apt-get clean \
+    && rm -rf /var/tmp/* /var/lib/apt/lists/* /tmp/* \
 
-    ## Download and decompress Nginx
+    ## Download and decompress NGINX
     && mkdir -p /tmp/build/nginx \
     && cd /tmp/build/nginx \
     && wget -O ${NGINX_VERSION}.tar.gz https://nginx.org/download/${NGINX_VERSION}.tar.gz \
@@ -38,11 +43,12 @@ RUN apt-get update \
     && make -j $(getconf _NPROCESSORS_ONLN) \
     && make install \
     && mkdir -p /var/lock/nginx \
+    && mkdir -p $NGINX_WEB_DIR \
     && rm -rf /tmp/build \
 
     ## Forward logs to Docker
     && ln -sf /dev/stdout /var/log/nginx/access.log \
-    && ln -sf /dev/stderr /var/log/nginx/error.log
+    && ln -sf /dev/stderr /var/log/nginx/error.log 
 
 ## Set up config file
 COPY nginx.conf /etc/nginx/nginx.conf
